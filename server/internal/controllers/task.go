@@ -1,4 +1,3 @@
-
 package controllers
 
 import (
@@ -6,16 +5,15 @@ import (
 	"fmt"
 	"log"
 
-	"../models"
+	"github.com/mdzkm/todo-list-app/server/internal/database"
+	"github.com/mdzkm/todo-list-app/server/internal/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func getAllTask() []primitive.M {
-	cur, err := collection.Find(context.Background(), bson.D{{}})
+func GetTasks() []primitive.M {
+	cur, err := database.GetCollection().Find(context.Background(), bson.D{{}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,38 +37,51 @@ func getAllTask() []primitive.M {
 	return results
 }
 
-func insertOneTask(task models.Task) {
-	insertResult, err := collection.InsertOne(context.Background(), task)
+func CreateTask(task models.Task) {
+	insertResult, err := database.GetCollection().InsertOne(context.Background(), task)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Inserted a Single Task ", insertResult.InsertedID)
+	fmt.Println("Inserted a Single Task", insertResult.InsertedID)
 }
 
-func taskComplete(task string) {
+func UpdateTask(task string, description string) {
+	fmt.Println(task)
+	id, _ := primitive.ObjectIDFromHex(task)
+	filter := bson.M{"_id": id}
+	update := bson.M{"$set": bson.M{"description": description}}
+	result, err := database.GetCollection().UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Modified count:", result.ModifiedCount)
+}
+
+func CompleteTask(task string) {
 	fmt.Println(task)
 	id, _ := primitive.ObjectIDFromHex(task)
 	filter := bson.M{"_id": id}
 	update := bson.M{"$set": bson.M{"status": true}}
-	result, err := collection.UpdateOne(context.Background(), filter, update)
+	result, err := database.GetCollection().UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Modified count: ", result.ModifiedCount)
+	fmt.Println("Modified count:", result.ModifiedCount)
 }
 
 // delete one task from the DB, delete by ID
-func deleteOneTask(task string) {
+func DeleteTask(task string) {
 	fmt.Println(task)
 	id, _ := primitive.ObjectIDFromHex(task)
 	filter := bson.M{"_id": id}
-	d, err := collection.DeleteOne(context.Background(), filter)
+	d, err := database.GetCollection().DeleteOne(context.Background(), filter)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Deleted Task ", d.DeletedCount)
+	fmt.Println("Deleted Task", d.DeletedCount)
 }

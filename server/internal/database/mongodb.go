@@ -12,7 +12,12 @@ import (
 // DB connection string
 // for localhost mongoDB
 // const connectionString = "mongodb://localhost:27017"
-const connectionString = "Connection String"
+const connectionString = "mongodb://localhost:27017"
+
+var credential = options.Credential{
+	Username: "root",
+	Password: "admin",
+}
 
 // Database Name
 const dbName = "todolist"
@@ -24,10 +29,10 @@ const collName = "tasks"
 var collection *mongo.Collection
 
 // create connection with mongo db
-func init() {
+func Init() {
 
 	// Set client options
-	clientOptions := options.Client().ApplyURI(connectionString)
+	clientOptions := options.Client().ApplyURI(connectionString).SetAuth(credential)
 
 	// connect to MongoDB
 	client, err := mongo.Connect(context.TODO(), clientOptions)
@@ -48,4 +53,8 @@ func init() {
 	collection = client.Database(dbName).Collection(collName)
 
 	fmt.Println("Collection instance created!")
+}
+
+func GetCollection() *mongo.Collection {
+	return collection
 }
